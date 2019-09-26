@@ -102,16 +102,26 @@ module snow5_core(
   wire [127 : 0] round0_in;
   wire [127 : 0] round0_out;
 
+  wire [127 : 0] round1_round_key;
+  wire [127 : 0] round1_in;
+  wire [127 : 0] round1_out;
+
 
   //----------------------------------------------------------------
   // Module instantions.
   //----------------------------------------------------------------
-  snow5_aes_round round(
+  snow5_aes_round round0(
                         .round_key(round0_round_key),
                         .in(round0_in),
                         .out(round0_out)
                         );
 
+
+  snow5_aes_round round1(
+                        .round_key(round1_round_key),
+                        .in(round1_in),
+                        .out(round1_out)
+                        );
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
