@@ -79,6 +79,10 @@ module snow5_core(
   reg           ready_new;
   reg           ready_we;
 
+  reg [15 : 0]  lfsr_a [0 : 15];
+  reg [15 : 0]  lfsr_b [0 : 15];
+  reg           lfsr_we;
+
   reg [127 : 0] r1_reg;
   reg [127 : 0] r1_new;
   reg [127 : 0] r2_reg;
@@ -95,9 +99,6 @@ module snow5_core(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [2 : 0]  update_type;
-  reg [31 : 0] muxed_sboxw;
-
   wire [127 : 0] round0_round_key;
   wire [127 : 0] round0_in;
   wire [127 : 0] round0_out;
@@ -105,6 +106,9 @@ module snow5_core(
   wire [127 : 0] round1_round_key;
   wire [127 : 0] round1_in;
   wire [127 : 0] round1_out;
+
+  reg init_state;
+  reg update_state;
 
 
   //----------------------------------------------------------------
@@ -135,13 +139,31 @@ module snow5_core(
   //----------------------------------------------------------------
   always @ (posedge clk)
     begin: reg_update
+      integer i;
+
       if (!reset_n)
         begin
+          for (i = 0 ; i < 16 ; i = i + 1)
+            begin
+              lfsr_a[i] <= 16'h0;
+              lfsr_b[i] <= 16'h0;
+            end
+
+          r1_reg         <= 128'h0;
+          r2_reg         <= 128'h0;
+          r3_reg         <= 128'h0;
           ready_reg      <= 1'b1;
           snow5_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
+          if (r_we)
+            begin
+              r1_reg <= r1_new;
+              r2_reg <= r2_new;
+              r3_reg <= r3_new;
+            end
+
           if (ready_we)
             ready_reg <= ready_new;
 
@@ -152,24 +174,83 @@ module snow5_core(
 
 
   //----------------------------------------------------------------
+  // lfsr_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : lfsr_logic
+
+    end
+
+
+  //----------------------------------------------------------------
+  // fsm_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : fsm_logic
+      r1_new = 128'h0;
+      r2_new = 128'h0;
+      r3_new = 128'h0;
+      r_we   = 1'h0;
+
+      if (init_state)
+        begin
+
+          r_we = 1'h1;
+        end
+
+      if (update_state)
+        begin
+          r2_new = round0_out;
+          r3_new = round1_out;
+
+          r_we = 1'h1;
+        end
+    end
+
+
+  //----------------------------------------------------------------
+  // output_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : output_logic
+
+      if (init_state)
+        begin
+        end
+
+      if (update_state)
+        begin
+        end
+    end
+
+
+  //----------------------------------------------------------------
   // snow5_core_ctrl
   //----------------------------------------------------------------
   always @*
     begin: snow5_core_ctrl
-      snow5_ctrl_new  = CTRL_IDLE;
-      snow5_ctrl_we   = 1'b0;
+      ready_new      = 1'h0;
+      ready_we       = 1'h0;
+      init_state     = 1'h0;
+      update_state   = 1'h0;
+      snow5_ctrl_new = CTRL_IDLE;
+      snow5_ctrl_we  = 1'h0;
 
       case(snow5_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init)
               begin
+                ready_new      = 1'h0;
+                ready_we       = 1'h1;
                 snow5_ctrl_new = CTRL_INIT;
                 snow5_ctrl_we  = 1'h1;
               end
 
             if (next)
               begin
+                ready_new      = 1'h0;
+                ready_we       = 1'h1;
                 snow5_ctrl_new = CTRL_NEXT;
                 snow5_ctrl_we  = 1'h1;
               end
@@ -189,6 +270,8 @@ module snow5_core(
 
         CTRL_DONE:
           begin
+            ready_new      = 1'h1;
+            ready_we       = 1'h1;
             snow5_ctrl_new = CTRL_IDLE;
             snow5_ctrl_we  = 1'h1;
           end
