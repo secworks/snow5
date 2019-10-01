@@ -133,6 +133,10 @@ module snow5_core(
   assign keystream = 128'h0;
   assign ready     = ready_reg;
 
+  // The round keys in the AES rounds in SNOW-V are always zero.
+  assign round0_round_key = 128'h0;
+  assign round1_round_key = 128'h0;
+
 
   //----------------------------------------------------------------
   // reg_update
