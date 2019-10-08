@@ -79,8 +79,14 @@ module snow5_core(
   reg           ready_new;
   reg           ready_we;
 
-  reg [15 : 0]  lfsr_a [0 : 15];
-  reg [15 : 0]  lfsr_b [0 : 15];
+  reg [15 : 0]  a_reg [0 : 15];
+  reg [15 : 0]  a_new [0 : 15];
+  reg           a_we;
+
+  reg [15 : 0]  b_reg [0 : 15];
+  reg [15 : 0]  b_new [0 : 15];
+  reg           b_we;
+
   reg           lfsr_we;
 
   reg [127 : 0] r1_reg;
@@ -107,8 +113,21 @@ module snow5_core(
   wire [127 : 0] round1_in;
   wire [127 : 0] round1_out;
 
+  reg  [127 : 0] t1;
+  reg  [127 : 0] t2;
+
   reg init_state;
   reg update_state;
+
+
+  //----------------------------------------------------------------
+  // Functions.
+  //----------------------------------------------------------------
+  function [127 : 0] sigma(input [127 : 0] op);
+    begin
+      sigma = {op[6 : 0], 1'b0} ^ (8'h1b & {8{op[7]}});
+    end
+  endfunction // gm2
 
 
   //----------------------------------------------------------------
@@ -149,8 +168,8 @@ module snow5_core(
         begin
           for (i = 0 ; i < 16 ; i = i + 1)
             begin
-              lfsr_a[i] <= 16'h0;
-              lfsr_b[i] <= 16'h0;
+              a_reg[i] <= 16'h0;
+              b_reg[i] <= 16'h0;
             end
 
           r1_reg         <= 128'h0;
@@ -168,6 +187,18 @@ module snow5_core(
               r3_reg <= r3_new;
             end
 
+          if (a_we)
+            begin
+              for (i = 0; i < 16 ; i = i + 1)
+                a_reg[i] <= a_new[i];
+            end
+
+          if (b_we)
+            begin
+              for (i = 0; i < 16 ; i = i + 1)
+                b_reg[i] <= b_new[i];
+            end
+
           if (ready_we)
             ready_reg <= ready_new;
 
@@ -182,7 +213,74 @@ module snow5_core(
   //----------------------------------------------------------------
   always @*
     begin : lfsr_logic
+      integer i;
+      reg [15 : 0] tmp_a;
+      reg [15 : 0] tmp_b;
 
+      t1 = {b_reg[15], b_reg[14], b_reg[13], b_reg[12],
+            b_reg[11], b_reg[10], b_reg[09], b_reg[08]};
+
+      t2 = {a_reg[07], a_reg[06], a_reg[05], a_reg[04],
+            a_reg[03], a_reg[02], a_reg[01], a_reg[00]};
+
+      for (i = 0 ; i < 16 ; i = i + 1)
+        begin
+          a_new[i] = 16'h0;
+          b_new[i] = 16'h0;
+        end
+
+      if (init_state)
+        begin
+          a_new[15] = key[127 : 112];
+          a_new[14] = key[111 : 096];
+          a_new[13] = key[095 : 080];
+          a_new[12] = key[079 : 064];
+          a_new[11] = key[063 : 048];
+          a_new[10] = key[047 : 031];
+          a_new[09] = key[031 : 016];
+          a_new[08] = key[015 : 000];
+          a_new[07] = iv[127 : 112];
+          a_new[06] = iv[111 : 096];
+          a_new[05] = iv[095 : 080];
+          a_new[04] = iv[079 : 064];
+          a_new[03] = iv[063 : 048];
+          a_new[02] = iv[047 : 031];
+          a_new[01] = iv[031 : 016];
+          a_new[00] = iv[015 : 000];
+          a_we      = 1'h1;
+
+          b_new[15] = key[255 : 240];
+          b_new[14] = key[239 : 224];
+          b_new[13] = key[223 : 208];
+          b_new[12] = key[207 : 192];
+          b_new[11] = key[191 : 176];
+          b_new[10] = key[175 : 160];
+          b_new[09] = key[159 : 144];
+          b_new[08] = key[143 : 128];
+          b_new[07] = 16'h0;
+          b_new[06] = 16'h0;
+          b_new[05] = 16'h0;
+          b_new[04] = 16'h0;
+          b_new[03] = 16'h0;
+          b_new[02] = 16'h0;
+          b_new[01] = 16'h0;
+          b_new[00] = 16'h0;
+          b_we      = 1'h1;
+        end
+
+
+      if (update_state)
+        begin
+          for (i = 0 ; i < 15 ; i = i + 1)
+              a_new[i] = a_reg[(i + i)];
+          a_new[15] = tmp_a;
+          a_we      = 1'h1;
+
+          for (i = 0 ; i < 15 ; i = i + 1)
+              b_new[i] = b_reg[(i + i)];
+          b_new[15] = tmp_b;
+          b_we      = 1'h1;
+        end
     end
 
 
@@ -191,15 +289,21 @@ module snow5_core(
   //----------------------------------------------------------------
   always @*
     begin : fsm_logic
+      reg [127 : 0] sigma;
+
       r1_new = 128'h0;
       r2_new = 128'h0;
       r3_new = 128'h0;
       r_we   = 1'h0;
 
+
+
       if (init_state)
         begin
-
-          r_we = 1'h1;
+          r1_new = 128'h0;
+          r2_new = 128'h0;
+          r3_new = 128'h0;
+          r_we   = 1'h1;
         end
 
       if (update_state)
