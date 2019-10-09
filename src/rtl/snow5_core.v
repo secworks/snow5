@@ -121,16 +121,6 @@ module snow5_core(
 
 
   //----------------------------------------------------------------
-  // Functions.
-  //----------------------------------------------------------------
-  function [127 : 0] sigma(input [127 : 0] op);
-    begin
-      sigma = {op[6 : 0], 1'b0} ^ (8'h1b & {8{op[7]}});
-    end
-  endfunction // gm2
-
-
-  //----------------------------------------------------------------
   // Module instantions.
   //----------------------------------------------------------------
   snow5_aes_round round0(
@@ -146,15 +136,18 @@ module snow5_core(
                         .out(round1_out)
                         );
 
+
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign keystream = 128'h0;
   assign ready     = ready_reg;
 
-  // The round keys in the AES rounds in SNOW-V are always zero.
   assign round0_round_key = 128'h0;
+  assign round0_in        = r1_reg;
+
   assign round1_round_key = 128'h0;
+  assign round1_in        = r2_reg;
 
 
   //----------------------------------------------------------------
@@ -268,7 +261,6 @@ module snow5_core(
           b_we      = 1'h1;
         end
 
-
       if (update_state)
         begin
           for (i = 0 ; i < 15 ; i = i + 1)
@@ -289,14 +281,37 @@ module snow5_core(
   //----------------------------------------------------------------
   always @*
     begin : fsm_logic
-      reg [127 : 0] sigma;
+      reg [127 : 0] tmp;
+      reg [127 : 0] tmp_s;
+      reg [7 : 0] b00, b01, b02, b03, b04, b05, b06, b07;
+      reg [7 : 0] b08, b09, b10, b11, b12, b13, b14, b15;
 
       r1_new = 128'h0;
       r2_new = 128'h0;
       r3_new = 128'h0;
       r_we   = 1'h0;
 
+      tmp   = r2_reg ^ (r3_reg + t2);
 
+      b00 = tmp[007 : 000];
+      b01 = tmp[015 : 008];
+      b02 = tmp[023 : 016];
+      b03 = tmp[031 : 024];
+      b04 = tmp[039 : 032];
+      b05 = tmp[047 : 040];
+      b06 = tmp[055 : 048];
+      b07 = tmp[063 : 056];
+      b08 = tmp[071 : 064];
+      b09 = tmp[079 : 072];
+      b10 = tmp[087 : 080];
+      b11 = tmp[095 : 088];
+      b12 = tmp[103 : 096];
+      b13 = tmp[111 : 104];
+      b14 = tmp[119 : 112];
+      b15 = tmp[127 : 120];
+
+      tmp_s = {b00, b04, b08, b12, b01, b05, b09, b13,
+               b02, b06, b10, b14, b03, b07, b11, b15};
 
       if (init_state)
         begin
@@ -308,9 +323,9 @@ module snow5_core(
 
       if (update_state)
         begin
+          r1_new = tmp_s;
           r2_new = round0_out;
           r3_new = round1_out;
-
           r_we = 1'h1;
         end
     end
