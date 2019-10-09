@@ -229,7 +229,7 @@ module snow5_core(
           a_new[13] = key[095 : 080];
           a_new[12] = key[079 : 064];
           a_new[11] = key[063 : 048];
-          a_new[10] = key[047 : 031];
+          a_new[10] = key[047 : 032];
           a_new[09] = key[031 : 016];
           a_new[08] = key[015 : 000];
           a_new[07] = iv[127 : 112];
@@ -237,7 +237,7 @@ module snow5_core(
           a_new[05] = iv[095 : 080];
           a_new[04] = iv[079 : 064];
           a_new[03] = iv[063 : 048];
-          a_new[02] = iv[047 : 031];
+          a_new[02] = iv[047 : 032];
           a_new[01] = iv[031 : 016];
           a_new[00] = iv[015 : 000];
           a_we      = 1'h1;
@@ -281,6 +281,7 @@ module snow5_core(
   //----------------------------------------------------------------
   always @*
     begin : fsm_logic
+      reg [127 : 0] tmp_a;
       reg [127 : 0] tmp;
       reg [127 : 0] tmp_s;
       reg [7 : 0] b00, b01, b02, b03, b04, b05, b06, b07;
@@ -291,8 +292,15 @@ module snow5_core(
       r3_new = 128'h0;
       r_we   = 1'h0;
 
-      tmp   = r2_reg ^ (r3_reg + t2);
+      // Parallel adders without propagating carry.
+      tmp_a = {r3_reg[127 : 096] + t2[127 : 096],
+               r3_reg[095 : 064] + t2[095 : 064],
+               r3_reg[063 : 032] + t2[063 : 032],
+               r3_reg[031 : 000] + t2[031 : 000]};
 
+      tmp   = r2_reg ^ tmp_a;
+
+      // Sigma word to 2D matrix AES state function.
       b00 = tmp[007 : 000];
       b01 = tmp[015 : 008];
       b02 = tmp[023 : 016];
@@ -312,6 +320,7 @@ module snow5_core(
 
       tmp_s = {b00, b04, b08, b12, b01, b05, b09, b13,
                b02, b06, b10, b14, b03, b07, b11, b15};
+
 
       if (init_state)
         begin
