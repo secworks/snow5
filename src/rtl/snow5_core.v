@@ -66,10 +66,13 @@ module snow5_core(
   localparam MAIN_UPDATE  = 3'h3;
   localparam FINAL_UPDATE = 3'h4;
 
-  localparam CTRL_IDLE  = 3'h0;
-  localparam CTRL_INIT  = 3'h1;
-  localparam CTRL_NEXT  = 3'h2;
-  localparam CTRL_DONE  = 3'h4;
+  localparam CTRL_IDLE        = 3'h0;
+  localparam CTRL_INIT        = 3'h1;
+  localparam CTRL_NEXT        = 3'h2;
+  localparam CTRL_FSM_UPDATE  = 3'h3;
+  localparam CTRL_LFSR_UPDATE = 3'h4;
+  localparam CTRL_OUTPUT      = 3'h5;
+  localparam CTRL_DONE        = 3'h6;
 
 
   //----------------------------------------------------------------
@@ -210,17 +213,24 @@ module snow5_core(
       reg [15 : 0] tmp_a;
       reg [15 : 0] tmp_b;
 
+      for (i = 0 ; i < 16 ; i = i + 1)
+        begin
+          a_new[i] = 16'h0;
+          b_new[i] = 16'h0;
+        end
+
+
       t1 = {b_reg[15], b_reg[14], b_reg[13], b_reg[12],
             b_reg[11], b_reg[10], b_reg[09], b_reg[08]};
 
       t2 = {a_reg[07], a_reg[06], a_reg[05], a_reg[04],
             a_reg[03], a_reg[02], a_reg[01], a_reg[00]};
 
-      for (i = 0 ; i < 16 ; i = i + 1)
-        begin
-          a_new[i] = 16'h0;
-          b_new[i] = 16'h0;
-        end
+
+      tmp_a = 16'h0;
+
+      tmp_b = 16'h0;
+
 
       if (init_state)
         begin
@@ -281,9 +291,7 @@ module snow5_core(
   //----------------------------------------------------------------
   always @*
     begin : fsm_logic
-      reg [127 : 0] tmp_a;
-      reg [127 : 0] tmp;
-      reg [127 : 0] tmp_s;
+      reg [127 : 0] tmp0, tmp1, tmp2;
       reg [7 : 0] b00, b01, b02, b03, b04, b05, b06, b07;
       reg [7 : 0] b08, b09, b10, b11, b12, b13, b14, b15;
 
@@ -292,34 +300,33 @@ module snow5_core(
       r3_new = 128'h0;
       r_we   = 1'h0;
 
-      // Parallel adders without propagating carry.
-      tmp_a = {r3_reg[127 : 096] + t2[127 : 096],
-               r3_reg[095 : 064] + t2[095 : 064],
-               r3_reg[063 : 032] + t2[063 : 032],
-               r3_reg[031 : 000] + t2[031 : 000]};
 
-      tmp   = r2_reg ^ tmp_a;
+      tmp0 = r3_reg ^ t2;
 
-      // Sigma word to 2D matrix AES state function.
-      b00 = tmp[007 : 000];
-      b01 = tmp[015 : 008];
-      b02 = tmp[023 : 016];
-      b03 = tmp[031 : 024];
-      b04 = tmp[039 : 032];
-      b05 = tmp[047 : 040];
-      b06 = tmp[055 : 048];
-      b07 = tmp[063 : 056];
-      b08 = tmp[071 : 064];
-      b09 = tmp[079 : 072];
-      b10 = tmp[087 : 080];
-      b11 = tmp[095 : 088];
-      b12 = tmp[103 : 096];
-      b13 = tmp[111 : 104];
-      b14 = tmp[119 : 112];
-      b15 = tmp[127 : 120];
+      tmp1   = {r2_reg[127 : 096] + tmp_a[127 : 096],
+                r2_reg[095 : 064] + tmp_a[095 : 064],
+                r2_reg[063 : 032] + tmp_a[063 : 032],
+                r2_reg[031 : 000] + tmp_a[031 : 000]};
 
-      tmp_s = {b00, b04, b08, b12, b01, b05, b09, b13,
-               b02, b06, b10, b14, b03, b07, b11, b15};
+      b00 = tmp1[007 : 000];
+      b01 = tmp1[015 : 008];
+      b02 = tmp1[023 : 016];
+      b03 = tmp1[031 : 024];
+      b04 = tmp1[039 : 032];
+      b05 = tmp1[047 : 040];
+      b06 = tmp1[055 : 048];
+      b07 = tmp1[063 : 056];
+      b08 = tmp1[071 : 064];
+      b09 = tmp1[079 : 072];
+      b10 = tmp1[087 : 080];
+      b11 = tmp1[095 : 088];
+      b12 = tmp1[103 : 096];
+      b13 = tmp1[111 : 104];
+      b14 = tmp1[119 : 112];
+      b15 = tmp1[127 : 120];
+
+      tmp2 = {b00, b04, b08, b12, b01, b05, b09, b13,
+              b02, b06, b10, b14, b03, b07, b11, b15};
 
 
       if (init_state)
@@ -332,10 +339,10 @@ module snow5_core(
 
       if (update_state)
         begin
-          r1_new = tmp_s;
+          r1_new = tmp2;
           r2_new = round0_out;
           r3_new = round1_out;
-          r_we = 1'h1;
+          r_we   = 1'h1;
         end
     end
 
@@ -388,17 +395,34 @@ module snow5_core(
               end
           end
 
+
         CTRL_INIT:
           begin
             snow5_ctrl_new = CTRL_DONE;
             snow5_ctrl_we  = 1'h1;
           end
 
+
         CTRL_NEXT:
           begin
             snow5_ctrl_new = CTRL_DONE;
             snow5_ctrl_we  = 1'h1;
           end
+
+
+        CTRL_FSM_UPDATE:
+          begin
+            snow5_ctrl_new = CTRL_DONE;
+            snow5_ctrl_we  = 1'h1;
+          end
+
+
+        CTRL_LFSR_UPDATE:
+          begin
+            snow5_ctrl_new = CTRL_DONE;
+            snow5_ctrl_we  = 1'h1;
+          end
+
 
         CTRL_DONE:
           begin
