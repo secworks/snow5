@@ -35,6 +35,9 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #===================================================================
+ROUND_SRC = ../src/rtl/snow5_aes_round.v
+TB_ROUND_SRC = ../src/tb/tb_snow5_aes_round.v
+
 CORE_SRC = ../src/rtl/snow5_core.v ../src/rtl/snow5_aes_round.v
 TB_CORE_SRC = ../src/tb/tb_snow5_core.v
 
@@ -48,7 +51,11 @@ LINT = verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
-all: top.sim core.sim
+all: round.sim top.sim core.sim
+
+
+round.sim: $(TB_ROUND_SRC) $(ROUND_SRC)
+	$(CC) $(CC_FLAGS) -o round.sim $(TB_ROUND_SRC) $(ROUND_SRC)
 
 
 core.sim: $(TB_CORE_SRC) $(CORE_SRC)
@@ -57,6 +64,10 @@ core.sim: $(TB_CORE_SRC) $(CORE_SRC)
 
 top.sim: $(TB_TOP) $(TOP_SRC)
 	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
+
+
+sim-round: round.sim
+	./round.sim
 
 
 sim-core: core.sim
@@ -72,6 +83,7 @@ lint:  $(TOP_SRC)
 
 
 clean:
+	rm -f round.sim
 	rm -f core.sim
 	rm -f top.sim
 
@@ -82,8 +94,10 @@ help:
 	@echo "Supported targets:"
 	@echo "------------------"
 	@echo "all:          Build all simulation targets."
+	@echo "round.sim:    Build aes round simulation target."
 	@echo "core.sim:     Build core level simulation target."
 	@echo "top.sim:      Build top level simulation target."
+	@echo "sim-round:    Run aes round simulation."
 	@echo "sim-core:     Run core level simulation."
 	@echo "sim-top:      Run top level core simulation."
 	@echo "lint:         Lint all rtl source files."
