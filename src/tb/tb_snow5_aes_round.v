@@ -180,7 +180,7 @@ module tb_snow5_aes_round();
   task tc1_aes_ni;
     begin : tc1_aes_ni
       $display("Testing vectors created using AES-NI:");
-      tb_round_key = 128'h0684704ce620c00ab2c5fef075817b9d;
+      tb_round_key = 128'h9d7b8175f0fec5b20ac020e64c708406;
       tb_in        = 128'h000102030405060708090a0b0c0d0e0f;
       #(2 * CLK_PERIOD);
       dump_dut_state();
