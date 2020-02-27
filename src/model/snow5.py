@@ -71,8 +71,8 @@ class SNOW5():
     #-------------------------------------------------------------------
     #-------------------------------------------------------------------
     def init(self, key, iv, aead_mode = False):
-        assert (len(key) == 16)
-        assert (len(iv) == 8)
+        assert (len(key) == 32)
+        assert (len(iv) == 16)
 
         for i in range(8):
             self.A[(15 - i)] = key[(7 - i)]
@@ -128,9 +128,22 @@ class SNOW5():
     # additional test vectors.
     #-------------------------------------------------------------------
     def selftest(self):
+        my_key = [0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57,
+                  0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+                  0x0a, 0x1a, 0x2a, 0x3a, 0x4a, 0x5a, 0x6a, 0x7a,
+                  0x8a, 0x9a, 0xaa, 0xba, 0xca, 0xda, 0xea, 0xfa]
+
+        my_iv = [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+                 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10]
+        print("Before init:")
         self.__dump_lfsr_state()
         self.__dump_fsm_state()
-        pass
+
+        self.init(my_key, my_iv)
+
+        print("After init:")
+        self.__dump_lfsr_state()
+        self.__dump_fsm_state()
 
 
     def __dump_lfsr_state(self):
