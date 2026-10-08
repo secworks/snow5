@@ -5,9 +5,6 @@
 # Gitignore for core projects.
 #=======================================================================
 
-## Reference model.
-/src/model/
-
 ## Generated files
 test*
 *.sim
