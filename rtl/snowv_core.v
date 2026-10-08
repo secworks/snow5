@@ -1,6 +1,6 @@
 //======================================================================
 //
-// snow5_core.v
+// snowv_core.v
 // ------------
 // The SNOW-V core.
 //
@@ -36,7 +36,7 @@
 //
 //======================================================================
 
-module snow5_core(
+module snowv_core(
                   input wire            clk,
                   input wire            reset_n,
 
@@ -100,9 +100,9 @@ module snow5_core(
   reg [127 : 0] r3_new;
   reg           r_we;
 
-  reg [2 : 0]   snow5_ctrl_reg;
-  reg [2 : 0]   snow5_ctrl_new;
-  reg           snow5_ctrl_we;
+  reg [2 : 0]   snowv_ctrl_reg;
+  reg [2 : 0]   snowv_ctrl_new;
+  reg           snowv_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -126,14 +126,14 @@ module snow5_core(
   //----------------------------------------------------------------
   // Module instantions.
   //----------------------------------------------------------------
-  snow5_aes_round round0(
+  snowv_aes_round round0(
                         .round_key(round0_round_key),
                         .in(round0_in),
                         .out(round0_out)
                         );
 
 
-  snow5_aes_round round1(
+  snowv_aes_round round1(
                         .round_key(round1_round_key),
                         .in(round1_in),
                         .out(round1_out)
@@ -172,7 +172,7 @@ module snow5_core(
           r2_reg         <= 128'h0;
           r3_reg         <= 128'h0;
           ready_reg      <= 1'b1;
-          snow5_ctrl_reg <= CTRL_IDLE;
+          snowv_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
@@ -198,8 +198,8 @@ module snow5_core(
           if (ready_we)
             ready_reg <= ready_new;
 
-          if (snow5_ctrl_we)
-            snow5_ctrl_reg <= snow5_ctrl_new;
+          if (snowv_ctrl_we)
+            snowv_ctrl_reg <= snowv_ctrl_new;
         end
     end // reg_update
 
@@ -364,63 +364,63 @@ module snow5_core(
 
 
   //----------------------------------------------------------------
-  // snow5_core_ctrl
+  // snowv_core_ctrl
   //----------------------------------------------------------------
   always @*
-    begin: snow5_core_ctrl
+    begin: snowv_core_ctrl
       ready_new      = 1'h0;
       ready_we       = 1'h0;
       init_state     = 1'h0;
       update_state   = 1'h0;
-      snow5_ctrl_new = CTRL_IDLE;
-      snow5_ctrl_we  = 1'h0;
+      snowv_ctrl_new = CTRL_IDLE;
+      snowv_ctrl_we  = 1'h0;
 
-      case(snow5_ctrl_reg)
+      case(snowv_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init)
               begin
                 ready_new      = 1'h0;
                 ready_we       = 1'h1;
-                snow5_ctrl_new = CTRL_INIT;
-                snow5_ctrl_we  = 1'h1;
+                snowv_ctrl_new = CTRL_INIT;
+                snowv_ctrl_we  = 1'h1;
               end
 
             if (next)
               begin
                 ready_new      = 1'h0;
                 ready_we       = 1'h1;
-                snow5_ctrl_new = CTRL_NEXT;
-                snow5_ctrl_we  = 1'h1;
+                snowv_ctrl_new = CTRL_NEXT;
+                snowv_ctrl_we  = 1'h1;
               end
           end
 
 
         CTRL_INIT:
           begin
-            snow5_ctrl_new = CTRL_DONE;
-            snow5_ctrl_we  = 1'h1;
+            snowv_ctrl_new = CTRL_DONE;
+            snowv_ctrl_we  = 1'h1;
           end
 
 
         CTRL_NEXT:
           begin
-            snow5_ctrl_new = CTRL_DONE;
-            snow5_ctrl_we  = 1'h1;
+            snowv_ctrl_new = CTRL_DONE;
+            snowv_ctrl_we  = 1'h1;
           end
 
 
         CTRL_FSM_UPDATE:
           begin
-            snow5_ctrl_new = CTRL_DONE;
-            snow5_ctrl_we  = 1'h1;
+            snowv_ctrl_new = CTRL_DONE;
+            snowv_ctrl_we  = 1'h1;
           end
 
 
         CTRL_LFSR_UPDATE:
           begin
-            snow5_ctrl_new = CTRL_DONE;
-            snow5_ctrl_we  = 1'h1;
+            snowv_ctrl_new = CTRL_DONE;
+            snowv_ctrl_we  = 1'h1;
           end
 
 
@@ -428,17 +428,17 @@ module snow5_core(
           begin
             ready_new      = 1'h1;
             ready_we       = 1'h1;
-            snow5_ctrl_new = CTRL_IDLE;
-            snow5_ctrl_we  = 1'h1;
+            snowv_ctrl_new = CTRL_IDLE;
+            snowv_ctrl_we  = 1'h1;
           end
 
         default:
           begin
           end
-      endcase // case (snow5_ctrl_reg)
-    end // snow5_core_ctrl
-endmodule // snow5_core
+      endcase // case (snowv_ctrl_reg)
+    end // snowv_core_ctrl
+endmodule // snowv_core
 
 //======================================================================
-// EOF snow5_core.v
+// EOF snowv_core.v
 //======================================================================

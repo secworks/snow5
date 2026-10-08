@@ -1,6 +1,6 @@
 //======================================================================
 //
-// snow5_aes_round.v
+// snowv_aes_round.v
 // -----------------
 // The AES encipher round function used in the SNOW-V core.
 // This is a combinational block.
@@ -37,7 +37,7 @@
 //
 //======================================================================
 
-module snow5_aes_round(
+module snowv_aes_round(
                        input wire [127 : 0]  round_key,
                        input wire [127 : 0]  in,
                        output wire [127 : 0] out
@@ -419,8 +419,8 @@ module snow5_aes_round(
       mixcolumns_block = mixcolumns(shiftrows_block);
       tmp_out          = addroundkey(mixcolumns_block, round_key);
     end // aes_round
-endmodule // snow5_aes_round
+endmodule // snowv_aes_round
 
 //======================================================================
-// EOF snow5_aes_round.v
+// EOF snowv_aes_round.v
 //======================================================================

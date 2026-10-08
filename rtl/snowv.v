@@ -1,6 +1,6 @@
 //======================================================================
 //
-// snow5.v
+// snowv.v
 // -------
 // Top level wrapper for the SNOW-V stream cipher core.
 //
@@ -36,7 +36,7 @@
 //
 //======================================================================
 
-module snow5(
+module snowv(
            input wire           clk,
            input wire           reset_n,
 
@@ -124,7 +124,7 @@ module snow5(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  snow5_core core(
+  snowv_core core(
                   .clk(clk),
                   .reset_n(reset_n),
 
@@ -221,8 +221,8 @@ module snow5(
             end
         end
     end // addr_decoder
-endmodule // snow5
+endmodule // snowv
 
 //======================================================================
-// EOF snow5.v
+// EOF snowv.v
 //======================================================================

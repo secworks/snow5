@@ -1,4 +1,4 @@
-# snow5
+# snowv
 Hardware implementation of the SNOW-V stream cipher.
 
 ## Status

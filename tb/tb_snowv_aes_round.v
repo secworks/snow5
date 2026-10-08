@@ -1,8 +1,8 @@
 //======================================================================
 //
-// tb_snow5_aes_round.v
+// tb_snowv_aes_round.v
 // --------------------
-// Testbench for AES round used in the snow5 stream cipher.
+// Testbench for AES round used in the snowv stream cipher.
 //
 //
 // Author: Joachim Strombergson
@@ -39,7 +39,7 @@
 //------------------------------------------------------------------
 // Test module.
 //------------------------------------------------------------------
-module tb_snow5_aes_round();
+module tb_snowv_aes_round();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -68,7 +68,7 @@ module tb_snow5_aes_round();
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  snow5_aes_round dut(
+  snowv_aes_round dut(
                       .round_key(tb_round_key),
                       .in(tb_in),
                       .out(tb_out)
@@ -193,7 +193,7 @@ module tb_snow5_aes_round();
   //----------------------------------------------------------------
   initial
     begin : main
-      $display("   -= Testbench for snow5 aes round started =-");
+      $display("   -= Testbench for snowv aes round started =-");
       $display("     =========================================");
       $display("");
 
@@ -206,11 +206,11 @@ module tb_snow5_aes_round();
 
       display_test_result();
       $display("");
-      $display("*** snow5 aes round simulation done. ***");
+      $display("*** snowv aes round simulation done. ***");
       $finish;
     end // main
-endmodule // tb_snow5_aes_round
+endmodule // tb_snowv_aes_round
 
 //======================================================================
-// EOF tb_snow5_aes_round.v
+// EOF tb_snowv_aes_round.v
 //======================================================================

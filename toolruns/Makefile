@@ -2,7 +2,7 @@
 #
 # Makefile
 # --------
-# Makefile for building the snow5 core and top level simulation.
+# Makefile for building the snowv core and top level simulation.
 #
 #
 # Author: Joachim Strombergson
@@ -35,14 +35,14 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #===================================================================
-ROUND_SRC = ../src/rtl/snow5_aes_round.v
-TB_ROUND_SRC = ../src/tb/tb_snow5_aes_round.v
+ROUND_SRC = ../rtl/snowv_aes_round.v
+TB_ROUND_SRC = ../tb/tb_snowv_aes_round.v
 
-CORE_SRC = ../src/rtl/snow5_core.v ../src/rtl/snow5_aes_round.v
-TB_CORE_SRC = ../src/tb/tb_snow5_core.v
+CORE_SRC = ../rtl/snowv_core.v ../rtl/snowv_aes_round.v
+TB_CORE_SRC = ../tb/tb_snowv_core.v
 
-TOP_SRC = ../src/rtl/snow5.v $(CORE_SRC)
-TB_TOP_SRC = ../src/tb/tb_snow5.v
+TOP_SRC = ../rtl/snowv.v $(CORE_SRC)
+TB_TOP_SRC = ../tb/tb_snowv.v
 
 CC = iverilog
 CC_FLAGS = -Wall
@@ -62,7 +62,7 @@ core.sim: $(TB_CORE_SRC) $(CORE_SRC)
 	$(CC) $(CC_FLAGS) -o core.sim $(TB_CORE_SRC) $(CORE_SRC)
 
 
-top.sim: $(TB_TOP) $(TOP_SRC)
+top.sim: $(TB_TOP_SRC) $(TOP_SRC)
 	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
 
 
